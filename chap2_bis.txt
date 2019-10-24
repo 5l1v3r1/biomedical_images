@@ -1,0 +1,158 @@
+Image Intensities 
+
+Pixels and 2D picture elements 
+Voxels and 3D volume elements 
+
+intensity and location
+
+Data types and image size
+
+Data Type   Range     No. Values
+
+uint8        0,255           256
+int8        -128,127         256 
+uint16       0,2(16)         2(16) 
+int16       -2(15),2(15)    2(16) 
+float16      -2(16),-2(16)  >>2(16) 
+
+
+
+import imageio
+
+im = imageio.imread('font-xray.jpg') 
+
+im.dtype
+ dtype('uint8') 
+
+im.size
+
+im_int64 = im.astype(np.uint64) 
+im_int64.size
+
+Histograms >> count number of pixels at each intensity value
+scikit-image
+
+
+import scipy.ndimage as ndi 
+import matplotlib.pyplot as plt
+
+hist = ndi.histogram(im, min=0,
+                         max=255, 
+                         bins=256) 
+
+hist.shape 
+
+plt.plot(hist) 
+plt.show() 
+
+Equalization 
+Distributions often skewed toward low intensities(background values) 
+
+
+Cumulative distribution function 
+(CDF) shows proportion of pixels in range
+
+import scipy.ndimage as ndi 
+
+hist = ndi.histogram(im, min=0, 
+                         max=255, 
+                         bins=256) 
+
+cdf = hist.cumsum / hist.sum() 
+cdf.shape
+
+im_equalized = cdf[im] * 255 
+fig, axes = plt.subplot(2, 1) 
+axes[0].imshow(im) 
+axes[1].imshow(im_equalized) 
+plt.show() 
+
+
+Masks 
+Logical operations result in True/False at each pixel 
+mat = np.array([1, 2, 3], 
+               [4, 5, 6], 
+               [7, 8, 9]) 
+mat > 5
+
+hist = ndi.histogram(im, 0, 255, 256) 
+mask1 = im > 32
+
+mask2 = im > 64 
+
+mask3 = mask1 & -mask2
+
+import numpy as np 
+
+im_bone = np.where(im > 64, im, 0) 
+plt.imshow(im_bone, cmap='gray') 
+plt.axis('off') 
+plt.show() 
+
+ndi.binary_dilatation(m,iterations=5) 
+ndi.binary_erosion(m,iterations=5) 
+
+Filters
+
+image convolution 
+
+import inageio
+import scipy.ndimage as ndi 
+
+im = imageio.imread('foot-xray.jpg') 
+
+weights = [[.11, .11, .11], 
+           [.11, .12, .11], 
+           [.11, .11, .11]] 
+
+
+im_filt = ndi.convolve(im, weights) 
+fig, axes = plt.subplots(2, 1) 
+axes[0].imshow(im, cmap='gray') 
+axes[1].imshow(im_filt, cmap='gray') 
+plt.imshow() 
+
+Filtering functions
+
+median_filter()
+uniform_filter() 
+maximum_filter()
+percentile_filter() 
+
+ndi.median_filter(im, size=10) 
+
+Gaussian filtering 
+ndi.gaussian_filter(im, sigma=5) 
+ndi.gaussian_filter(im, sigma=10) 
+
+Feature Detection 
+Edge detection 
+
+im=imageio.imread('foot-xray.jpg') 
+
+weights = [[+1, +1, +1],
+          [0, 0, 0], 
+          [-1, -1, -1]] 
+
+edges = ndi.convolve(im, weights) 
+plt.imshow(edges, cmap='seismic') 
+
+Sobel filters 
+edges0 = ndi.sobel(im, axis=0) 
+edges1 = ndi.sobel(im, axis=1) 
+
+edges=np.sqrt(np.square(edges0) + np.square(edges1)) 
+plt.imshow(edges, cmap='gray') 
+
+
+
+
+
+
+
+
+
+
+
+
+

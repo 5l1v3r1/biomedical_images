@@ -1,0 +1,209 @@
+Translations
+In this chapter, we'll leverage data use data from the Open Access Series of Imaging Studies to compare the brains of different populations: young and old, male and female, healthy and diseased.
+
+To start, center a single slice of a 3D brain volume (im). First, find the center point in the image array and the center of mass of the brain. Then, translate the image to the center.
+
+This chapter's exercises have all had the following imports:
+
+import imageio
+import numpy as np
+import scipy.ndimage as ndi
+import matplotlib.pyplot as plt
+
+# Find image center of mass
+com = ndi.center_of_mass(im)
+
+# Calculate amount of shift needed
+d0 = 128 - com[0]
+d1 = 128 - com[1]
+
+# Translate the brain towards the center
+xfm = ndi.shift(im, shift=(d0, d1)) 
+
+# Find image center of mass
+com = ndi.center_of_mass(im)
+
+# Calculate amount of shift needed
+d0 = 128 - com[0]
+d1 = 128 - com[1]
+
+# Translate the brain towards the center
+xfm = ndi.shift(im, shift=(d0, d1))
+
+# Plot the original and adjusted images
+fig, axes = plt.subplots(2, 1)
+axes[0].imshow(im)
+axes[1].imshow(xfm)
+format_and_render_plot()  
+
+Rotations
+In cases where an object is angled or flipped, the image can be rotated. Using ndi.rotate(), the image is rotated from its center by the specified degrees from the right horizontal axis.
+
+# Shift the image towards the center
+xfm = ndi.shift(im, shift=(-20, -20))
+
+# Rotate the shifted image
+xfm = ndi.rotate(xfm, angle=-30, reshape=False)
+
+# Plot the original and transformed images
+fig, axes = plt.subplots(2, 1)
+axes[0].imshow(im)
+axes[1].imshow(xfm)
+format_and_render_plot() 
+
+Affine transform
+An affine transformation matrix provides directions for up to four types of changes: translating, rotating, rescaling and shearing. The elements of the matrix map the coordinates from the input array to the output.
+
+Resampling
+Images can be collected in a variety of shapes and sizes. Resampling is a useful tool when these shapes need to be made consistent. Two common applications are:
+
+Downsampling: combining pixel data to decrease size
+Upsampling: distributing pixel data to increase size
+For this exercise, transform and then resample the brain image (im) to see how it affects image shape.
+
+# Center and level image
+xfm = ndi.shift(im, shift=(-20, -20))
+xfm = ndi.rotate(xfm, angle=-35, reshape=False)
+
+# Resample image
+im_dn = ndi.zoom(xfm, zoom=0.25)
+im_up = ndi.zoom(xfm, zoom=4.00)
+
+# Plot the images
+fig, axes = plt.subplots(2, 1)
+axes[0].imshow(im_dn)
+axes[1].imshow(im_up)
+format_and_render_plot() 
+
+Interpolation
+Interpolation is how new pixel intensities are estimated when an image transformation is applied. It is implemented in SciPy using sets of spline functions.
+
+Editing the interpolation order when using a function such as ndi.zoom() modifies the resulting estimate: higher orders provide more flexible estimates but take longer to compute.
+
+For this exercise, upsample im and investigate the effect of different interpolation orders on the resulting image.
+
+# Upsample "im" by a factor of 4
+up0 = ndi.zoom(im, zoom=4, order=0)
+up5 = ndi.zoom(im, zoom=4, order=5)
+
+# Print original and new shape
+print('Original shape:', im.shape)
+print('Upsampled shape:', up0.shape)
+
+# Plot close-ups of the new images
+fig, axes = plt.subplots(1, 2)
+axes[0].imshow(up0[128:256, 128:256])
+axes[1].imshow(up5[128:256, 128:256])
+format_and_render_plots() 
+
+Mean absolute error
+Cost functions and objective functions output a single value that summarizes how well two images match.
+
+The mean absolute error (MAE), for example, summarizes intensity differences between two images, with higher values indicating greater divergence.
+
+For this exercise, calculate the mean absolute error between im1 and im2 step-by-step.
+ Calculate image difference
+err = im1 - im2
+
+# Plot the difference
+plt.imshow(err, cmap='seismic', vmin=-200, vmax=200)
+format_and_render_plot() 
+
+# Calculate absolute image difference
+abs_err = np.abs(im1 - im2)
+
+# Plot the difference
+plt.imshow(abs_err, cmap='seismic', vmin=-200, vmax=200)
+format_and_render_plot()
+
+# Calculate mean absolute error
+mean_abs_err = np.mean(np.abs(im1 - im2))
+print('MAE:', mean_abs_err)
+
+Intersection of the union
+Another cost function is the intersection of the union (IOU). The IOU is the number of pixels filled in both images (the intersection) out of the number of pixels filled in either image (the union).
+
+For this exercise, determine how best to transform im1 to maximize the IOU cost function with im2. We have defined the following function for you:
+
+def intersection_of_union(im1, im2):
+    i = np.logical_and(im1, im2)
+    u = np.logical_or(im1, im2)
+    return i.sum() / u.sum() 
+
+
+Identifying potential confounds
+Once measures have been extracted, double-check for dependencies within your data. This is especially true if any image parameters (sampling rate, field of view) might differ between subjects, or you pull multiple measures from a single image.
+
+For the final exercises, we have combined demographic and brain volume measures into a pandas DataFrame (df).
+
+First, you will explore the table and available variables. Then, you will check for correlations between the data. 
+
+# Print random sample of rows
+print(df.sample(3)) 
+
+# Print prevalence of Alzheimer's Disease
+print(df.alzheimers.value_counts()) 
+
+# Print random sample of rows
+print(df.sample(3))
+
+# Print prevalence of Alzheimer's Disease
+print(df.alzheimers.value_counts())
+
+# Print a correlation table
+print(df.corr()) 
+
+Testing group differences 
+
+We can perform a two-sample t-test between the brain volumes of elderly adults with and without Alzheimer's Disease. In this case, the two population samples are independent from each other because they are all separate subjects.
+
+For this exercise, use the OASIS dataset (df) and ttest_ind to evaluate the hypothesis.
+
+# Import independent two-sample t-test
+from scipy.stats import ttest_ind 
+
+# Import independent two-sample t-test
+from scipy.stats import ttest_ind
+
+# Select data from "alzheimers" and "typical" groups
+brain_alz = df.loc[df.alzheimers == True, 'brain_vol']
+brain_typ = df.loc[df.alzheimers == False, 'brain_vol'] 
+
+# Perform t-test of "alz" > "typ"
+results = ttest_ind(brain_alz, brain_typ)
+print('t = ', results.statistic)
+print('p = ', results.pvalue) 
+
+# Show boxplot of brain_vol differences
+df.boxplot(column='brain_vol', by='alzheimers')
+plt.show() 
+
+
+Normalizing metrics
+We previously saw that there was not a significant difference between the brain volumes of elderly individuals with and without Alzheimer's Disease.
+
+But could a correlated measure, such as "skull volume" be masking the differences?
+
+For this exercise, calculate a new test statistic for the comparison of brain volume between groups, after adjusting for the subject's skull size.
+
+Using results.statistic and results.pvalue as your guide, answer the question: Is there strong evidence that Alzheimer's Disease is marked by smaller brain size, relative to skull size?
+
+# Import independent two-sample t-test
+from scipy.stats import ttest_ind
+
+# Divide `df.brain_vol` by `df.skull_vol`
+df['adj_brain_vol'] = df.brain_vol / df.skull_vol
+
+# Select brain measures by Alzheimers group
+brain_alz = df.loc[df.alzheimers == True, 'adj_brain_vol']
+brain_typ = df.loc[df.alzheimers == False, 'adj_brain_vol']
+
+# Evaluate null hypothesis
+results = ttest_ind(brain_alz, brain_typ) 
+
+
+
+ 
+
+
+

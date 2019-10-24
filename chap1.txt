@@ -1,0 +1,173 @@
+Load images
+In this chapter, we'll work with sections of a computed tomography (CT) scan from The Cancer Imaging Archive. CT uses a rotating X-ray tube to create a 3D image of the target area.
+
+The actual content of the image depends on the instrument used: photographs measure visible light, x-ray and CT measure radiation absorbance, and MRI scanners measure magnetic fields.
+
+To warm up, use the imageio package to load a single DICOM image from the scan volume and check out a few of its attributes.
+
+ Import ImageIO
+import imageio
+
+# Load "chest-220.dcm"
+im = imageio.imread('chest-220.dcm')
+
+# Print image attributes
+print('Image type:', type(im))
+print('Shape of image array:', im.shape) 
+
+Metadata
+ImageIO reads in data as Image objects. These are standard NumPy arrays with a dictionary of metadata.
+
+Metadata can be quite rich in medical images and can include:
+
+Patient demographics: name, age, sex, clinical information
+Acquisition information: image shape, sampling rates, data type, modality (such as X-Ray, CT or MRI)
+Start this exercise by reading in the chest image and listing the available fields in the meta dictionary.
+
+# Import ImageIO and load image
+import imageio
+im = imageio.imread('chest-220.dcm')
+
+# Print the available metadata fields
+print(im.meta.keys()) 
+
+Plot images
+Perhaps the most critical principle of image analysis is: look at your images!
+
+Matplotlib's imshow() function gives you a simple way to do this. Knowing a few simple arguments will help:
+
+cmap controls the color mappings for each value. The "gray" colormap is common, but many others are available.
+vmin and vmax control the color contrast between values. Changing these can reduce the influence of extreme values.
+plt.axis('off') removes axis and tick labels from the image.
+For this exercise, plot the CT scan and investigate the effect of a few different parameters.
+
+# Import ImageIO and PyPlot 
+import imageio
+import matplotlib.pyplot as plt
+
+# Read in "chest-220.dcm"
+im = imageio.imread('chest-220.dcm') 
+
+# Draw the image in grayscale
+plt.imshow(im, cmap='gray')
+
+# Render the image
+plt.show()
+
+# Draw the image with greater contrast
+plt.imshow(im, cmap='gray', vmin=-200, vmax=200)
+
+# Render the image
+plt.show()
+
+# Remove axis ticks and labels
+plt.axis('off')
+
+# Render the image
+plt.show()
+
+
+Stack images
+Image "stacks" are a useful metaphor for understanding multi-dimensional data. Each higher dimension is a stack of lower dimensional arrays.
+
+
+
+In this exercise, we will use NumPy's stack() function to combine several 2D arrays into a 3D volume. By convention, volumetric data should be stacked along the first dimension: vol[plane, row, col].
+
+Note: performing any operations on an ImageIO Image object will convert it to a numpy.ndarray, stripping its metadata.
+
+# Import ImageIO and NumPy
+import imageio
+import numpy as np
+
+# Read in each 2D image
+im1 = imageio.imread('chest-220.dcm')
+im2 = imageio.imread('chest-221.dcm')
+im3 = imageio.imread('chest-222.dcm')
+
+# Stack images into a volume
+vol = np.stack([im1, im2, im3], axis=0)
+print('Volume dimensions:', vol.shape) 
+
+Load volumes
+ImageIO's volread() function can load multi-dimensional datasets and create 3D volumes from a folder of images. It can also aggregate metadata across these multiple images.
+
+For this exercise, read in an entire volume of brain data from the "tcia-chest-ct" folder, which contains 25 DICOM images.
+
+# Import ImageIO
+import imageio
+
+# Load the "tcia-chest-ct" directory
+vol = imageio.volread('tcia-chest-ct')
+
+# Print image attributes
+print('Available metadata:', vol.meta.keys())
+print('Shape of image array:', vol.shape) 
+
+Generate subplots
+You can draw multiple images in one figure to explore data quickly. Use plt.subplots() to generate an array of subplots.
+
+fig, axes = plt.subplots(nrows=2, ncols=2) 
+
+o draw an image on a subplot, call the plotting method directly from the subplot object rather than through PyPlot: axes[0,0].imshow(im) rather than plt.imshow(im).
+
+# Import PyPlot
+import matplotlib.pyplot as plt
+
+# Initialize figure and axes grid
+fig, axes = plt.subplots(nrows=2, ncols=1)
+
+# Draw an image on each subplot
+axes[0].imshow(im1, cmap='gray')
+axes[1].imshow(im2, cmap='gray')
+
+# Remove ticks/labels and render
+axes[0].axis('off')
+axes[1].axis('off')
+plt.show() 
+
+Slice 3D images
+The simplest way to plot 3D and 4D images by slicing them into many 2D frames. Plotting many slices sequentially can create a "fly-through" effect that helps you understand the image as a whole.
+
+To select a 2D frame, pick a frame for the first axis and select all data from the remaining two: vol[0, :, :]
+
+For this exercise, use for loop to plot every 40th slice of vol on a separate subplot. matplotlib.pyplot (as plt) has been imported for you.
+
+# Plot the images on a subplots array 
+fig, axes = plt.subplots(nrows=1, ncols=4)
+
+# Loop through subplots and draw image
+for ii in range(4):
+    im = vol[ii * 40, :, :]
+    axes[ii].imshow(im, cmap='gray')
+    axes[ii].axis('off')
+
+# Render the figure
+plt.show() 
+
+Plot other views
+Any two dimensions of an array can form an image, and slicing along different axes can provide a useful perspective. However, unequal sampling rates can create distorted images.
+
+
+
+Changing the aspect ratio can address this by increasing the width of one of the dimensions.
+
+For this exercise, plot images that slice along the second and third dimensions of vol. Explicitly set the aspect ratio to generate undistorted images.
+
+# Select frame from "vol"
+im1 = vol[:, 256, :]
+im2 = vol[:, :, 256]
+
+# Compute aspect ratios
+d0, d1, d2 = vol.meta['sampling']
+asp1 = d0 / d2
+asp2 = d0 / d1
+
+# Plot the images on a subplots array 
+fig, axes = plt.subplots(nrows=2, ncols=1)
+axes[0].imshow(im1, cmap='gray', aspect=asp1)
+axes[1].imshow(im2, cmap='gray', aspect=asp2)
+plt.show() 
+
+
+

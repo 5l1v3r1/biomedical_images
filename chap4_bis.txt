@@ -1,0 +1,141 @@
+Spatial Transformations
+
+OASIS Database 
+
+Registration 
+
+Align images to template 
+Minimize spatial variability 
+Templates  >> represent multiple subjects , be an average image
+
+Affine transformations preserve points
+
+import imageio
+import scipy.ndimage as ndi 
+
+im=imageio.imread('OAS1036-2d.dcm') 
+im.shape 
+
+com = ndi.center_of_mass(im) 
+
+d0 = 128 - com[0] 
+d1 = 128 - com[1] 
+
+xfm = ndi.shift(im, shift=[d0, d1]) 
+
+Rotation
+ndi.rotate(im, angle=25, axes=(0,1)) 
+xfm = ndi.rotate(im, angle=25) 
+xfm.shape  
+
+xfm = ndi.rotate(im, angle=25, reshape=False) 
+xfm.shape 
+
+Transformation matrix 
+Transformation matrix applied to one image for registration 
+Elements of the matrix encode 'instructions' for different affine transformations
+
+mat = [[ 1, 0, 0], 
+       [0, 1, 0], 
+       [0, 0, 1]] 
+
+xfm = ndi.affine_transform(im, mat) 
+
+
+Resampling and interpolation 
+
+vol = imageio.volread('OAS1_0255') 
+vol.shape
+
+Downsampling
+vol_dn = ndi.zoom(vol, zoom=0.5) 
+vol_dn.shape
+
+Upsampling 
+Resampling to a larger grid 
+Not the same as collecting higher-resolution data
+useful for standardzing sampling rates that are unequal 
+
+vol_dn = ndi.zoom(vol, zoom=2) 
+
+Interpolation 
+im=np.arrange(100).reshape([10, 20]) 
+
+Comparing Images
+
+import imageio
+import numpy as np 
+
+i1=imageio.imread('0AS1035-v1.dcm') 
+i2=imageio.imread('0AS1035-v2.dcm') 
+
+err = i1 - i2 
+plt.imshow(err) 
+
+abs_err = np.abs(err) 
+plt.imshow(abs_err) 
+
+mae = np.mean(abs_err) 
+mae 
+
+xfm=ndi.shift(im1, shift=(-8, -8)) 
+xfm=ndi.rotate(xfm, -18, reshape=False) 
+
+abs_err = np.abs(im1 - im2) 
+mean_abs_err = np.mean(abs_err) 
+mean_abs_err 
+
+Intersection of the Union 
+mask = im1 > 0
+mask2 = im2 > 0
+
+intsxn = mask1 & mask2 
+plt.imshow(intsxn) 
+
+union = mask1 | mask2
+plt.imshow(union) 
+
+iou = intsxn.sum() / union.sum() 
+iou 
+
+Normalizing Measurements  
+put image in the dataframe 
+
+df.shape
+
+df.sample(5) 
+ 
+brain_m = df.loc[df.sex == 'M', 'brain_vol'] 
+
+brain_f = df.loc[df.sex == 'F', 'brain_vol'] 
+
+from scipy.stats import ttest_ind
+
+results = ttest_ind(brain_m, brain_f) 
+
+results.statistic 
+
+results.pvalue
+
+df[['brain_vol', 'skill_vol']].corr() 
+
+Normalization 
+
+df['brain_norm'] = df.brain_vol / df.skill_vol 
+
+brain_norm_m = df.loc[df.sex == 'M', 'brain_norm'] 
+brain_norm_f = df.loc[df.sex == 'F', 'brain_norm'] 
+
+results = ttest_ind(brain_norm_m, brain_norm_f) 
+
+results.statistic 
+
+results.pvalue
+
+Many potential confounds in imaging 
+
+
+
+
+
+

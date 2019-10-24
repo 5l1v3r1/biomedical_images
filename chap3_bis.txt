@@ -1,0 +1,138 @@
+Segmentation splits an image into parts
+
+import scipy.ndimage as ndi 
+
+im=imageio.imread('SC02401-2d.dcm') 
+filt=ndi.gaussian_filter(im, sigma=2) 
+
+mask = filt > 150 
+labels, nlabels = ndi.label(mask) 
+
+plt.imshow(labels, cmap='rainbow') 
+plt.axis('off') 
+plt.show() 
+
+Label section
+np.where(labels == 1, im, 0) 
+
+np.where(labels < 3, im, 0) 
+
+ 
+Object extraction
+ 
+Bounding box range of pixels that completely encloses an object 
+
+ndi.find_objects() returns a list of bounding box coordinates 
+
+labels, nlabels = ndi.label(mask) 
+boxes = ndi.find_objects(labels) 
+
+Measuring intensity 
+
+scipy.ndimage.measurements: 
+ndi.mean() 
+ndi.median() 
+ndi.sum() 
+ndi.maximum() 
+ndi.standard_deviation() 
+ndi.variance() 
+
+Functions applied over all dimensions, optionally at specific labels
+Custom functions
+ndi.labeled_comprehension() 
+
+Calling measurement functions
+import imageio
+import scipy.ndimage as ndi 
+
+vol=imageio.volread('SCD-3d.npz') 
+label=imageio.volread('labels.npz') 
+ndi.mean(vol) 
+ndi.mean(vol, label)  
+ndi.mean(vol, label, index=1) 
+ndi.mean(vol, label, index=[1,2]) 
+
+Objects histograms 
+
+hist=ndi.histogram(vol, min=0, max=255, bins=256) 
+obj_hists=ndi.histogram(vol, 0, 255, 256, labels, index=[1, 2]) 
+len(obj_hists) 
+
+plt.plot(obj_hists[0], label='Left ventricle') 
+plt.plot(obj_hists[1], label='Other labelled pixels') 
+plt.legend() 
+plt.show() 
+
+Histograms containing multiple tissue types will have several peaks 
+
+Histograms for well-segmented tissue often resemble a normal distribution 
+
+Measuring morphology 
+Spatial extent is the product of 
+1. Space occupied by each element 
+2. Number of array elements
+
+d0, d1, d2 = vol.meta['sampling'] 
+dvoxel = d0 * d1 * d2 
+
+nvosels=ndi.sum(1, label, index=1) >>> Count label voxels 
+
+volume = nvoxels * dvoxel 
+volume 
+
+Euclidean Distance 
+mask=np.where(labels == 1, 1, 0) 
+
+d=ndi.distance_transform_edt(mask) 
+
+d.max() 
+
+d=ndi.distance_transform_edt(mask, sampling=vol.meta['sampling']) 
+
+d.max() 
+
+Center of mass 
+
+com=ndi.center_of_mass(vol, labels, index=1) 
+com 
+
+plt.imshow(vol[5], cmap='gray') 
+plt.scatter(com[2], com[1]) 
+plt.show() 
+
+
+
+
+Measuring in time
+Ejection fraction 
+
+1. Segment left ventricle
+2. For each 3D volume in the time series, calculate volume
+3. Select minimum and maximum 
+
+vol_ts.shape
+labels.shape
+
+d0, d1, d2, d3=vol_ts.meta['sampling'] 
+dvoxel = d1 * d2 * d3 
+
+ts = np.zeros(20) 
+
+for t in range(20): 
+ nvoxels=ndi.sum(1, labels[t], index=1) 
+
+ ts[t] = nvoxels * dvoxel
+
+plt.plot(ts) 
+plt.show() 
+
+min_vol = ts.min() 
+max_vol = ts.max() 
+
+ejec_frac = (max_vol - min_vol) / max_vol 
+eject_frac
+
+
+
+
+

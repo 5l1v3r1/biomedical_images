@@ -1,0 +1,146 @@
+Biomedical Imaging 
+
+Courses objectives
+ 
+Exploration 
+Loading images
+N-D data
+Subplots 
+
+Masks and Filters 
+Intensity 
+distributions 
+convolutions
+Edge detection 
+
+Measurement 
+Labelling 
+Multi-object 
+measurement 
+Morphology 
+
+Image Comparison 
+Transformations 
+Resampling 
+Cost functions 
+Normalization 
+
+Packages 
+Inageio, numpy, matplotlib , etc...
+
+imageio : read and save images
+import imageio 
+
+im = imageio.imread('body-001.dcm') 
+type(im) 
+im 
+im[0, 0] > Slice the array by specifying values along each available dimension
+im[0:2, 0:2] 
+
+Metadata 
+the who, what, when, where and how of image acquisition 
+Accessible in Image objects through the meta dictionary attribute 
+
+im.meta
+im.meta.keys() 
+
+im.meta['Modality'] 
+
+import matplotlib.pyplot as plt 
+
+plt.imshow(im, cmap='gray') 
+plt.axis('off') 
+plt.show() 
+
+N-dimensional images 
+images of all shapes and sizes
+
+im[row, col] 
+vol[pln, row, col] 
+im[row, col, ch] 
+im_ts[time, row, col, ch] 
+
+import imageio
+import numpy as np 
+
+im1 = imageio.imread('chest-000.dcm') 
+im2 = imageio.imread('chest-001.dcm') 
+im3 = imageio.imread('chest-002.dcm') 
+
+im1.shape
+
+vol = np.stack([im1, im2, im3])
+
+vol.shape
+
+imageio.volread() 
+
+read multi-dimensional data directly 
+assemble a volume from multiple 
+
+images
+
+import os 
+os.listdir('chest-data') 
+
+vol = imageio.volread('chest-data') 
+vol.shape
+
+Image shape number of elements along each axis 
+Sampling rate physical space covered by each element 
+Field pf view physical space covered along each axis
+
+Image shape
+n0, n1, n2 = vol.shape
+n0, n1, n2
+
+Sampling rate
+d0, d1, d2 = vol.metal('sampling') 
+d0, d1, d2
+
+Field of view
+n0 * d0, n1 * d1, n2 * d2 
+
+Plotting multiple images at once
+plt.subplots create at figure canvas 
+
+import imageio 
+
+vol = imageio.volread('chest-data') 
+fig, axes = plt.subplots(nrows=1, ncols=3) 
+
+axes[0].imshow(vol[0], cmap='gray') 
+axes[1].imshow(vol[10], cmap='gray') 
+axes[2].imshow(vol[20], cmap='gray') 
+
+for ax in axes: 
+ ax.axis('off') 
+
+plt.show() 
+
+
+import imageio 
+
+vol = imageio.volread('chest-data') 
+view_lv2 = vol[pln, :, :] 
+view_lv2 = vol[pln] 
+
+view_0v2 = vol[:, row, :] 
+view_0v1 = vol[:, :, col] 
+
+Modifying the aspect ratio
+  4:1
+  16:9
+  1:1 
+
+im = vol[:,:,100] 
+d0, d1, d2 = vol.meta['sampling'] 
+d0, d1, d2  
+
+asp = d0 / d1 
+asp 
+
+plt.imshow(im, cmap='gray', aspect=asp) 
+plt.show() 
+
+
